@@ -188,6 +188,7 @@ public class RecursoRepositoryImpl extends JdbcDaoSupport implements RecursoRepo
                 srepro.registerStoredProcedureParameter("metroCubico", BigDecimal.class, ParameterMode.IN);
                 srepro.registerStoredProcedureParameter("disponibilidadActa", String.class, ParameterMode.IN);
                 srepro.registerStoredProcedureParameter("cantidadTotal", BigDecimal.class, ParameterMode.IN);
+                srepro.registerStoredProcedureParameter("txObservaciones", String.class, ParameterMode.IN);
                 srepro.registerStoredProcedureParameter("IdRecursoProducto", Integer.class, ParameterMode.INOUT);
                 setStoreProcedureEnableNullParameters(srepro);
                 srepro.setParameter("IdRecurso", reEntity.getNuIdRecurso());
@@ -207,6 +208,7 @@ public class RecursoRepositoryImpl extends JdbcDaoSupport implements RecursoRepo
                 srepro.setParameter("metroCubico", pro.getMetroCubico());
                 srepro.setParameter("disponibilidadActa", pro.getDisponibilidadActa());
                 srepro.setParameter("cantidadTotal", pro.getCantidadTotal());
+                srepro.setParameter("txObservaciones", pro.getTxObservaciones());
                 srepro.execute();
                 //Integer idProductosReturn =(Integer)sppr.getOutputParameterValue("@IdRecursoProducto");
                 Integer idProductoRecursoReturn = (Integer) srepro.getOutputParameterValue("IdRecursoProducto");
@@ -504,6 +506,7 @@ public class RecursoRepositoryImpl extends JdbcDaoSupport implements RecursoRepo
             reEntity.setCantidadTotal((BigDecimal) row[22]);
             reEntity.setNuIdArchivoRecursoProducto((Integer) row[23]);
             reEntity.setNuIdArchivoRecurso((Integer) row[24]);
+            reEntity.setTxObservaciones((String) row[25]);
             items.add(reEntity);
             pageable.setTotalRecords(SpUtil.toLong(row[12]));
         }
@@ -948,6 +951,36 @@ public class RecursoRepositoryImpl extends JdbcDaoSupport implements RecursoRepo
             pageable.setMessage("No se encontró data.");
         }
         return pageable;
+    }
+
+    @Override
+    public ResultClassEntity<Integer> ActualizarRecursoArchivos(RecursoEntity archivo) {
+
+        execActualizar(archivo);
+        ResultClassEntity<Integer> result = new ResultClassEntity<>();
+        result.setData(archivo.getNuIdArchivoRecurso());
+        result.setSuccess(true);
+        return result;
+    }
+    private void execActualizar(RecursoEntity archivo) {
+        try {
+            StoredProcedureQuery sp = em.createStoredProcedureQuery("almacen.pa_Recurso_Actualizar_Archivos");
+            sp.registerStoredProcedureParameter("nuIdRecurso", Integer.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter("nuIdRecursoProducto", Integer.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter("nuIdArchivo", Integer.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter("typeAccion", String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter("nuIdUsuarioModifica", Integer.class, ParameterMode.IN);
+            SpUtil.enableNullParams(sp);
+            sp.setParameter("nuIdRecurso", archivo.getNuIdRecurso());
+            sp.setParameter("nuIdRecursoProducto", archivo.getNuIdRecursoProducto());
+            sp.setParameter("nuIdArchivo", archivo.getNuIdArchivoRecurso());
+            sp.setParameter("typeAccion", archivo.getTypeAccion());
+            sp.setParameter("nuIdUsuarioModifica", archivo.getNuIdUsuarioModificacion());
+            sp.execute();
+        } catch (Exception e) {
+            log.error("TransferenciRepositoryImpl - execActualizar"+"Ocurrió un error :" + e.getMessage());
+            throw e;
+        }
     }
 
 }
