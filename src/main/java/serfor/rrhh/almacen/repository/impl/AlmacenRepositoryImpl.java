@@ -360,6 +360,4 @@ public class AlmacenRepositoryImpl extends JdbcDaoSupport implements AlmacenRepo
             return resultClassEntity;
         }
     }
-
-
 }
